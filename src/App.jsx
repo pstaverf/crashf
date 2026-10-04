@@ -6,9 +6,8 @@ import BetPanel from "./components/BetPanel.jsx";
 import StageErrorBoundary from "./components/StageErrorBoundary.jsx";
 
 export default function App() {
-  const { phase, countdown, multiplier, history, balance, bet, lastResult, fair, placeBet, cashOut } = useCrashRound({
-    startingBalance: 1000
-  });
+  const { phase, countdown, multiplier, history, balance, bet, lastResult, fair, placeBet, cashOut } =
+    useCrashRound({ startingBalance: 1000 });
 
   return (
     <div className="app-shell">

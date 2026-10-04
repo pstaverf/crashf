@@ -1,36 +1,62 @@
-/** Hex-encode a SHA-256 digest of `text` using the Web Crypto API. */
+/**
+ * Браузерная сторона проверки честности.
+ *
+ * Здесь НЕТ генерации раундов — её забрал сервер. Остались только примитивы,
+ * которыми клиент НЕЗАВИСИМО пересчитывает уже сыгранный раунд из раскрытого
+ * сида и сравнивает результат с тем, что показал сервер.
+ *
+ * Формула живёт в общем модуле shared/fair.js — ровно тот же файл импортирует
+ * сервер. Разъехаться они не могут по построению.
+ */
+import { verifyRound as verifyRoundCore, SALT, MAX_MULTIPLIER } from "../../shared/fair.js";
+
+export { SALT, MAX_MULTIPLIER };
+
+/** Web Crypto доступен только в secure context (https или localhost). */
+export function cryptoAvailable() {
+  return typeof crypto !== "undefined" && !!crypto.subtle;
+}
+
+function toHex(buffer) {
+  return Array.from(new Uint8Array(buffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export async function sha256Hex(text) {
-  const bytes = new TextEncoder().encode(text);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return toHex(digest);
 }
 
-/** A random 16-byte hex seed, generated with a CSPRNG. */
-export function randomSeed() {
-  const bytes = crypto.getRandomValues(new Uint8Array(16));
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-/** Deterministic float in [0, 1) derived from the first 52 bits of a hex hash. */
-function hashToUnitFloat(hex) {
-  const slice = hex.slice(0, 13);
-  const value = parseInt(slice, 16);
-  const max = Math.pow(16, 13);
-  return value / max;
+export async function hmacSha256Hex(key, message) {
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(key),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", cryptoKey, new TextEncoder().encode(message));
+  return toHex(signature);
 }
 
 /**
- * Same long-tail crash formula as before, but seeded from the round's hash
- * instead of Math.random() — so the result can be reproduced and checked
- * once the seed is revealed after the round.
+ * Перепроверить раунд прямо в браузере.
+ * Возвращает `{ unavailable: true }`, если страница открыта не по HTTPS —
+ * раньше в такой ситуации приложение просто молча умирало.
  */
-export function crashPointFromHash(hex, houseEdge = 0.03) {
-  const r = hashToUnitFloat(hex);
-  if (r < houseEdge) return 1.0;
-  const raw = (1 - houseEdge) / (1 - r);
-  return Math.max(1, Math.round(raw * 100) / 100);
+export async function verifyRoundInBrowser(round, previousSeed) {
+  if (!cryptoAvailable()) {
+    return { unavailable: true, ok: false, reason: "Проверка требует HTTPS (Web Crypto недоступен)" };
+  }
+  try {
+    return await verifyRoundCore(
+      { serverSeed: round.serverSeed, serverSeedHash: round.serverSeedHash, crashPoint: round.crashPoint },
+      previousSeed,
+      sha256Hex,
+      hmacSha256Hex
+    );
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
 }

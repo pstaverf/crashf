@@ -58,16 +58,22 @@ export default function BetPanel({ phase, balance, bet, multiplier, lastResult, 
 
       {bet.placed && bet.cashedOutAt != null && phase !== "waiting" && (
         <div className="betpanel__status betpanel__status--win">
-          Забрано на x{bet.cashedOutAt.toFixed(2)} · +{(bet.amount * bet.cashedOutAt).toFixed(0)}
+          Забрано на x{bet.cashedOutAt.toFixed(2)} · +{(bet.amount * (bet.cashedOutAt - 1)).toFixed(0)}
         </div>
       )}
 
       {phase === "crashed" && lastResult && lastResult.won === false && (
-        <div className="betpanel__status betpanel__status--loss">Ставка сгорела</div>
+        <div className="betpanel__status betpanel__status--loss">
+          {lastResult.voided ? "Кэш-аут не прошёл: раунд уже лопнул" : "Ставка сгорела"}
+        </div>
       )}
 
       {phase !== "waiting" && !bet.placed && (
-        <div className="betpanel__status betpanel__status--muted">Ставки откроются в начале следующего раунда</div>
+        <div className="betpanel__status betpanel__status--muted">
+          {phase === "connecting" || phase === "offline"
+            ? "Ждём игровой сервер…"
+            : "Ставки откроются в начале следующего раунда"}
+        </div>
       )}
     </div>
   );

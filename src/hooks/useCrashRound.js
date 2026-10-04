@@ -1,122 +1,202 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { crashPointFromHash, randomSeed, sha256Hex } from "../utils/fair.js";
+import { serverNow } from "../utils/clock.js";
+import { multiplierAt, MAX_MULTIPLIER } from "../../shared/fair.js";
 
-const COUNTDOWN_START = 5;
-const COUNTDOWN_TICK_MS = 1000;
-const CRASHED_HOLD_MS = 5000;
-const GROWTH_K = Math.log(10) / 6600; // ~10x around 6.6s of flight
-
+/**
+ * Клиент серверного раунда.
+ *
+ * Раньше этот хук САМ придумывал точку краша — то есть «честность» проверял
+ * тот же код, который и жульничал бы. Теперь раунд целиком ведёт сервер
+ * (`server/engine.js`), а хук только:
+ *   1. слушает SSE /api/stream,
+ *   2. рисует множитель по серверному таймлайну между событиями,
+ *   3. ведёт локальный демо-баланс.
+ *
+ * Точка краша приходит клиенту ТОЛЬКО вместе с событием взрыва — подсмотреть
+ * её в DevTools до этого момента физически нечего.
+ */
 export function useCrashRound({ startingBalance = 1000 } = {}) {
-  const [phase, setPhase] = useState("waiting"); // waiting | flying | crashed
-  const [countdown, setCountdown] = useState(COUNTDOWN_START);
+  const [phase, setPhase] = useState("connecting"); // connecting | waiting | flying | crashed | offline
+  const [countdown, setCountdown] = useState(5);
   const [multiplier, setMultiplier] = useState(1.0);
   const [history, setHistory] = useState([]);
   const [balance, setBalance] = useState(startingBalance);
   const [bet, setBet] = useState({ amount: 0, placed: false, cashedOutAt: null });
-  const [lastResult, setLastResult] = useState(null); // { won, amount }
-  const [fair, setFair] = useState({ hash: "", seed: null });
+  const [lastResult, setLastResult] = useState(null);
+  const [fair, setFair] = useState({
+    hash: "",
+    salt: "",
+    terminalCommit: "",
+    totalRounds: 0,
+    remaining: 0,
+    nonce: null
+  });
 
-  const crashPointRef = useRef(1.0);
-  const flightStartRef = useRef(0);
-  const rafRef = useRef(null);
-  const timeoutRef = useRef(null);
+  const roundRef = useRef(null);
   const betRef = useRef(bet);
-  const fairRef = useRef({ hash: "", seed: "" });
+  const rafRef = useRef(null);
+  const phaseRef = useRef(phase);
 
   useEffect(() => {
     betRef.current = bet;
   }, [bet]);
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
-  const clearTimers = () => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-  };
-
-  const beginWaiting = useCallback(async () => {
-    setPhase("waiting");
-    setCountdown(COUNTDOWN_START);
-    setMultiplier(1.0);
-    setLastResult(null);
-
-    // Commit: publish this round's hash before it starts. The seed behind
-    // it (and therefore the crash point) is only revealed after the crash.
-    const seed = randomSeed();
-    const hash = await sha256Hex(seed);
-    fairRef.current = { hash, seed };
-    crashPointRef.current = crashPointFromHash(hash);
-    setFair({ hash, seed: null });
-
-    let n = COUNTDOWN_START;
-    const tick = () => {
-      n -= 1;
-      if (n <= 0) {
-        setCountdown(0);
-        beginFlying();
-        return;
-      }
-      setCountdown(n);
-      timeoutRef.current = setTimeout(tick, COUNTDOWN_TICK_MS);
-    };
-    timeoutRef.current = setTimeout(tick, COUNTDOWN_TICK_MS);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const beginFlying = () => {
-    setPhase("flying");
-    flightStartRef.current = performance.now();
-
-    const step = (now) => {
-      const elapsed = now - flightStartRef.current;
-      const m = Math.exp(GROWTH_K * elapsed);
-      if (m >= crashPointRef.current) {
-        setMultiplier(crashPointRef.current);
-        crashNow();
-        return;
-      }
-      setMultiplier(m);
-      rafRef.current = requestAnimationFrame(step);
-    };
-    rafRef.current = requestAnimationFrame(step);
-  };
-
-  const crashNow = () => {
-    setPhase("crashed");
-    const finalValue = crashPointRef.current;
-    const { hash, seed } = fairRef.current;
-    setFair({ hash, seed }); // reveal
-    setHistory((h) => [{ value: finalValue, id: `${Date.now()}`, hash, seed }, ...h].slice(0, 10));
-
-    const currentBet = betRef.current;
+  /** Ставка не сыграла — закрываем раунд проигрышем. */
+  const settleLoss = useCallback((currentBet) => {
     if (currentBet.placed && currentBet.cashedOutAt == null) {
       setLastResult({ won: false, amount: currentBet.amount });
     }
-
-    timeoutRef.current = setTimeout(() => {
-      setBet({ amount: 0, placed: false, cashedOutAt: null });
-      beginWaiting();
-    }, CRASHED_HOLD_MS);
-  };
-
-  useEffect(() => {
-    beginWaiting();
-    return clearTimers;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const placeBet = (amount) => {
-    if (phase !== "waiting" || bet.placed || amount <= 0 || amount > balance) return false;
-    setBalance((b) => b - amount);
-    setBet({ amount, placed: true, cashedOutAt: null });
-    return true;
-  };
+  // ----------------------------------------------------------------- стрим
+  useEffect(() => {
+    let source;
+    let reconnectTimer = null;
+    let closed = false;
 
-  const cashOut = () => {
+    const applyRound = (round, snapshotHistory) => {
+      if (!round) return;
+      roundRef.current = round;
+
+      setFair((f) => ({ ...f, hash: round.serverSeedHash, nonce: round.nonce }));
+
+      if (snapshotHistory) {
+        setHistory(
+          snapshotHistory.map((r) => ({
+            id: r.id,
+            value: r.crashPoint,
+            nonce: r.nonce,
+            seed: r.serverSeed,
+            hash: r.serverSeedHash
+          }))
+        );
+      }
+
+      if (round.phase === "waiting") {
+        setPhase("waiting");
+        setMultiplier(1.0);
+        setLastResult(null);
+        setBet({ amount: 0, placed: false, cashedOutAt: null });
+      } else if (round.phase === "flying") {
+        setPhase("flying");
+      } else if (round.phase === "crashed") {
+        setPhase("crashed");
+        setMultiplier(round.crashPoint);
+
+        const currentBet = betRef.current;
+        // Защита целостности: забрать выше точки краша нельзя, даже если
+        // локальная анимация успела нарисовать больше из-за сетевой задержки.
+        if (currentBet.placed && currentBet.cashedOutAt != null && currentBet.cashedOutAt > round.crashPoint) {
+          setBalance((b) => b - currentBet.amount * currentBet.cashedOutAt);
+          setBet((c) => ({ ...c, cashedOutAt: null }));
+          setLastResult({ won: false, amount: currentBet.amount, voided: true });
+        } else {
+          settleLoss(currentBet);
+        }
+      }
+    };
+
+    const connect = () => {
+      source = new EventSource("/api/stream");
+
+      source.onmessage = (event) => {
+        let msg;
+        try {
+          msg = JSON.parse(event.data);
+        } catch {
+          return;
+        }
+
+        if (msg.fairness) {
+          setFair((f) => ({ ...f, ...msg.fairness }));
+        }
+
+        if (msg.type === "halted") {
+          setPhase("offline");
+          return;
+        }
+
+        applyRound(msg.round, msg.history || (msg.type === "snapshot" ? [] : null));
+      };
+
+      source.onerror = () => {
+        if (closed) return;
+        source.close();
+        setPhase((p) => (p === "connecting" ? "offline" : p));
+        reconnectTimer = setTimeout(connect, 1500);
+      };
+    };
+
+    connect();
+
+    return () => {
+      closed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (source) source.close();
+    };
+  }, [settleLoss]);
+
+  // ------------------------------------------------- анимация множителя
+  useEffect(() => {
+    if (phase !== "flying") return undefined;
+
+    const step = () => {
+      const round = roundRef.current;
+      if (round?.flyingStartedAt) {
+        const elapsed = serverNow() - round.flyingStartedAt;
+        setMultiplier(Math.min(multiplierAt(elapsed), MAX_MULTIPLIER));
+      }
+      rafRef.current = requestAnimationFrame(step);
+    };
+
+    rafRef.current = requestAnimationFrame(step);
+    return () => rafRef.current && cancelAnimationFrame(rafRef.current);
+  }, [phase]);
+
+  // --------------------------------------------------------- отсчёт 5→1
+  useEffect(() => {
+    if (phase !== "waiting") return undefined;
+
+    const tick = () => {
+      const round = roundRef.current;
+      if (!round?.countdownEndsAt) return;
+      setCountdown(Math.max(0, Math.ceil((round.countdownEndsAt - serverNow()) / 1000)));
+    };
+
+    tick();
+    const id = setInterval(tick, 200);
+    return () => clearInterval(id);
+  }, [phase]);
+
+  // ------------------------------------------------------------- ставки
+  const placeBet = useCallback(
+    (amount) => {
+      if (phase !== "waiting" || bet.placed || amount <= 0 || amount > balance) return false;
+      setBalance((b) => b - amount);
+      setBet({ amount, placed: true, cashedOutAt: null });
+      return true;
+    },
+    [phase, bet.placed, balance]
+  );
+
+  const cashOut = useCallback(() => {
     if (phase !== "flying" || !bet.placed || bet.cashedOutAt != null) return;
-    const payout = bet.amount * multiplier;
+
+    // Берём множитель на момент клика по серверным часам, а не последнее
+    // отрисованное значение — так клик не теряет и не выигрывает лишний кадр.
+    const round = roundRef.current;
+    const at = round?.flyingStartedAt
+      ? Math.min(multiplierAt(serverNow() - round.flyingStartedAt), MAX_MULTIPLIER)
+      : multiplier;
+
+    const payout = bet.amount * at;
     setBalance((b) => b + payout);
-    setBet((c) => ({ ...c, cashedOutAt: multiplier }));
-    setLastResult({ won: true, amount: payout });
-  };
+    setBet((c) => ({ ...c, cashedOutAt: at }));
+    setLastResult({ won: true, amount: payout, profit: payout - bet.amount });
+  }, [phase, bet, multiplier]);
 
   return {
     phase,
@@ -128,6 +208,7 @@ export function useCrashRound({ startingBalance = 1000 } = {}) {
     lastResult,
     fair,
     placeBet,
-    cashOut
+    cashOut,
+    online: phase !== "offline" && phase !== "connecting"
   };
 }

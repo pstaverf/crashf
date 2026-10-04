@@ -12,7 +12,7 @@ export default function LaunchStage({ phase, countdown, fair, history }) {
   return (
     <div className={`stage stage--${phase}`}>
       <PingBadge />
-      <FairnessPanel currentHash={fair.hash} history={history} />
+      <FairnessPanel fair={fair} history={history} />
 
       <div className="stage__grid" aria-hidden="true">
         <div className="stage__grid-layer stage__grid-layer--far" />
@@ -23,6 +23,19 @@ export default function LaunchStage({ phase, countdown, fair, history }) {
 
       <div className="stage__content">
         <AnimatePresence>
+          {(phase === "connecting" || phase === "offline") && (
+            <motion.div
+              key="link"
+              className="stage__link"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {phase === "connecting" ? "Соединение с игровым сервером…" : "Нет связи с сервером. Переподключаемся…"}
+            </motion.div>
+          )}
+
           {phase === "waiting" && countdown > 0 && (
             <motion.div
               key="countdown"

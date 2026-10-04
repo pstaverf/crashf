@@ -17,7 +17,7 @@ export default function Multiplier({ phase, value }) {
   return (
     <div className="mult">
       <AnimatePresence>
-        {phase !== "waiting" && (
+        {(phase === "flying" || phase === "crashed") && (
           <motion.div
             key="mult-inner"
             className="mult__inner"

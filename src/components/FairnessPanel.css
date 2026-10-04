@@ -150,3 +150,138 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ---------------------------------------------- серверная проверка честности */
+
+.fairness-modal__warn {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--mult-danger);
+  background: rgba(255, 75, 92, 0.08);
+  border: 1px solid rgba(255, 75, 92, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  margin-bottom: 14px;
+}
+
+.fairness-modal__grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.fairness-modal__grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.fairness-modal__mini {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-void-deep);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 7px 9px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fairness-modal__formula {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.fairness-modal__formula code {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  background: var(--bg-void-deep);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  word-break: break-word;
+}
+
+.fairness-modal__verify-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fairness-modal__recheck {
+  background: none;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  color: var(--ignition);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 11px;
+}
+
+.fairness-modal__recheck:disabled {
+  color: var(--text-faint);
+}
+
+.fairness-modal__verdict {
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: var(--radius-sm);
+  padding: 8px 11px;
+}
+
+.fairness-modal__verdict.is-good {
+  color: var(--win);
+  background: rgba(51, 209, 126, 0.08);
+  border: 1px solid rgba(51, 209, 126, 0.25);
+}
+
+.fairness-modal__verdict.is-bad {
+  color: var(--loss);
+  background: rgba(255, 75, 92, 0.08);
+  border: 1px solid rgba(255, 75, 92, 0.25);
+}
+
+.fairness-modal__mark {
+  flex: none;
+  width: 16px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fairness-modal__mark.is-ok {
+  color: var(--win);
+}
+
+.fairness-modal__mark.is-bad {
+  color: var(--loss);
+}
+
+.fairness-modal__mark.is-idle {
+  color: var(--text-faint);
+}
+
+.fairness-modal__foot {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-faint);
+  margin: 4px 0 0;
+}
+
+.fairness-modal__foot code {
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.fairness-modal__hash,
+.fairness-modal__round-seed,
+.fairness-modal__mini {
+  cursor: pointer;
+}
