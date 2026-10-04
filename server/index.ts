@@ -176,6 +176,11 @@ const server = http.createServer((req, res) => {
   }
 
   void loadAsset(route).then(async (asset) => {
+    if (!asset && path.extname(route)) {
+      send(res, 404, '{"error":"not found"}');
+      return;
+    }
+
     const file = asset ?? (await loadAsset("/"));
     if (!file) {
       send(res, 404, '{"error":"not found"}');

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import "./Preloader.css";
 
-const ASSET_URLS = ["/animations/rocket.lottie", "/animations/explosion.lottie"];
+const ASSET_URLS = ["/animations/rocket.lottie", "/animations/explosion.lottie", "/animations/time.lottie"];
 const MAX_WAIT_MS = 4000;
 const MIN_SHOW_MS = 450;
 const easeOut = [0.16, 1, 0.3, 1] as const;
