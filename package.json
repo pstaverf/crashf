@@ -9,6 +9,8 @@
     "server": "node server/index.ts",
     "build": "tsc --noEmit && vite build",
     "start": "node server/index.ts",
+    "serve": "bash scripts/start.sh",
+    "tunnel": "bash scripts/tunnel.sh",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
@@ -28,5 +30,8 @@
   },
   "overrides": {
     "@rollup/rollup-android-arm64": "4.45.1"
+  },
+  "engines": {
+    "node": ">=22.18"
   }
 }

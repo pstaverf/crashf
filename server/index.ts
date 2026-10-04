@@ -143,6 +143,10 @@ const server = http.createServer((req, res) => {
   const route = url.split("?", 1)[0]!;
 
   switch (route) {
+    case "/api/health":
+      send(res, 200, `{"ok":true,"uptime":${Math.round(process.uptime())}}`);
+      return;
+
     case "/api/state":
       send(res, 200, engine.snapshotJson());
       return;
@@ -213,6 +217,29 @@ server.on("connection", (socket) => socket.setNoDelay(true));
 server.keepAliveTimeout = 65000;
 server.headersTimeout = 70000;
 
+server.on("error", (err: NodeJS.ErrnoException) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`[server] порт ${PORT} уже занят — сервер запущен в другой сессии`);
+    console.error(`[server] проверьте: curl localhost:${PORT}/api/health`);
+    process.exit(1);
+  }
+  if (err.code === "EACCES") {
+    console.error(`[server] нет прав на порт ${PORT} — возьмите порт выше 1024`);
+    process.exit(1);
+  }
+  throw err;
+});
+
 server.listen(PORT, HOST, () => {
   console.log(`[server] http://${HOST}:${PORT} (static: ${SERVE_STATIC ? "dist" : "off"})`);
 });
+
+const shutdown = (signal: string): void => {
+  console.log(`[server] ${signal}, останавливаюсь`);
+  engine.stop();
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 5000).unref();
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

@@ -22,6 +22,10 @@ npm start       # один Node-процесс: отдаёт dist и /api на :
 
 Отдельно по частям: `npm run server` и `npm run dev:client`.
 
+Публикация на `grisk.fun` с телефона через Termux и Cloudflare Tunnel —
+пошагово в [`DEPLOY.md`](DEPLOY.md). Коротко: `npm run serve` поднимает сервер,
+`npm run tunnel` связывает его с доменом.
+
 ## Анимации лежат на CDN
 
 Локальных файлов в репозитории больше нет — ракета, взрыв и часы грузятся с
