@@ -69,25 +69,34 @@ interface Asset {
   body: Buffer;
   type: string;
   etag: string;
+  mtimeMs: number;
 }
 
 const assets = new Map<string, Asset | null>();
 
 const loadAsset = async (route: string): Promise<Asset | null> => {
   const cached = assets.get(route);
-  if (cached !== undefined) return cached;
+  if (cached !== undefined && route.startsWith("/assets/")) return cached;
 
   const file = path.join(DIST, route === "/" ? "index.html" : route.slice(1));
-  let asset: Asset | null = null;
+  if (!file.startsWith(DIST)) return null;
 
-  if (file.startsWith(DIST)) {
-    try {
-      const [body, info] = await Promise.all([readFile(file), stat(file)]);
-      asset = { body, type: MIME[path.extname(file)] ?? "application/octet-stream", etag: `W/"${info.size}-${info.mtimeMs}"` };
-    } catch {
-      asset = null;
-    }
+  let info;
+  try {
+    info = await stat(file);
+  } catch {
+    assets.set(route, null);
+    return null;
   }
+
+  if (cached && cached.mtimeMs === info.mtimeMs) return cached;
+
+  const asset: Asset = {
+    body: await readFile(file),
+    type: MIME[path.extname(file)] ?? "application/octet-stream",
+    etag: `W/"${info.size}-${info.mtimeMs}"`,
+    mtimeMs: info.mtimeMs
+  };
 
   assets.set(route, asset);
   return asset;
