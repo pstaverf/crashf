@@ -22,40 +22,49 @@ npm start       # один Node-процесс: отдаёт dist и /api на :
 
 Отдельно по частям: `npm run server` и `npm run dev:client`.
 
-## Where your animation files go
+## Анимации лежат на CDN
 
-Drop your two animations into `public/animations/` using **these exact names**
-(or edit the two `src="/animations/..."` paths in `src/components/LaunchStage.jsx`):
+Локальных файлов в репозитории больше нет — ракета, взрыв и часы грузятся с
 
 ```
-public/animations/rocket.lottie
-public/animations/explosion.lottie
+https://cdn.kleymorf.xyz/crash/rocket.lottie
+https://cdn.kleymorf.xyz/crash/explosion.lottie
+https://cdn.kleymorf.xyz/crash/time.lottie
 ```
 
-Обе анимации уже лежат в репозитории. Если файл пропадёт или не загрузится,
-приложение покажет собственную CSS/SVG-ракету и взрыв — экран не ломается.
+Все три адреса собираются в одном месте — `src/config.ts`. База переопределяется
+переменной окружения, так что на локальную папку или другой хост можно
+переключиться без правок кода:
 
-## Which file format to actually use
+```bash
+VITE_ANIMATIONS_BASE=/animations npm run dev
+VITE_ANIMATIONS_BASE=https://cdn.example.com/crash npm run build
+```
 
-You have four exports of the same animation (`.json`, `.lottie`, `.png`, `.tgs`).
-They're not four different things you need — pick one per animation:
+**CDN обязан отдавать CORS-заголовок** `Access-Control-Allow-Origin` — плеер
+забирает файлы обычным `fetch`, и без разрешения браузер их не отдаст коду.
+На Cloudflare это Transform Rule с `access-control-allow-origin: *` либо
+правило на конкретный домен игры.
 
-- **`.lottie` — use this one.** It's the dotLottie container format: the
-  animation plus its assets zipped into a single compact file. The player
-  already wired up (`@lottiefiles/dotlottie-react`) reads it directly.
-- **`.json` — solid fallback.** Plain Lottie JSON, the older/uncompressed
-  format. The same player reads this too, so if a `.lottie` file ever behaves
-  oddly, swap in the `.json` version with no code changes needed.
-- **`.tgs` — skip it, don't add it to the site.** That's Telegram's own
-  sticker container (a gzipped Lottie JSON with Telegram-specific limits).
-  Browsers and web Lottie players don't read it, and you don't need it since
-  you already have the same animation as `.json`/`.lottie`.
-- **`.png` — not for playback.** It's a single static preview frame. Handy as
-  a loading poster, a fallback image, or a share/OG thumbnail — not something
-  you feed to the player.
+Если файл не ответил за 6 секунд, не загрузился или вернул ошибку, на его месте
+рисуется собственная CSS-версия — ракета, взрыв и часы написаны руками в
+`FallbackRocket`, `FallbackExplosion` и `FallbackClock`. Экран не ломается
+никогда, даже если CDN целиком лежит.
 
-So: take the `.lottie` (or `.json`) pair for the rocket and for the explosion,
-rename them as above, and that's the whole integration.
+### Какой формат заливать
+
+- **`.lottie`** — то, что нужно. Контейнер с анимацией и ассетами в одном
+  сжатом файле, плеер читает его напрямую.
+- **`.json`** — запасной вариант, обычный Lottie. Тот же плеер его тоже читает,
+  достаточно поменять расширение в `src/config.ts`.
+- **`.tgs`** — не заливать. Это телеграмный контейнер стикера, браузерные плееры
+  его не понимают.
+- **`.png`** — не для проигрывания, это один статичный кадр.
+
+Заливая файлы, убедитесь, что они не прошли через текстовое преобразование:
+`.lottie` — это zip, и потеря одного байта делает его нечитаемым (ровно это
+случилось с первой версией `time.lottie`). Проверка на месте:
+`unzip -t time.lottie`.
 
 ## Multiplier colors (fixed ranges)
 
@@ -162,9 +171,11 @@ src/
   state/multiplier.ts        внешний стор множителя (60 к/с мимо React)
   utils/clock.ts             серверные часы
   utils/fair.ts              Web Crypto адаптеры + проверка раунда в браузере
+  config.ts                  адреса анимаций на CDN (переопределяются через env)
   components/                LaunchStage, Multiplier, BetPanel, FairnessPanel,
                              PingBadge, HistoryStrip, Preloader, LottieAsset,
-                             FallbackRocket, FallbackExplosion, StageErrorBoundary
+                             FallbackRocket, FallbackExplosion, FallbackClock,
+                             StageErrorBoundary
 ```
 
 Типы: `npm run typecheck` (strict, `noUncheckedIndexedAccess`, `erasableSyntaxOnly`).

@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { subscribeMultiplier } from "../state/multiplier.ts";
 import LottieAsset from "./LottieAsset.tsx";
+import { ANIMATIONS } from "../config.ts";
 import FallbackClock from "./FallbackClock.tsx";
 import type { ClientPhase } from "../../shared/protocol.ts";
 import type { Bet, LastResult } from "../hooks/useCrashRound.ts";
@@ -117,7 +118,7 @@ function BetPanel({ phase, balance, bet, lastResult, onPlaceBet, onCashOut }: Be
 
         {phase !== "waiting" && !bet.placed && (
           <div className="betpanel__wait">
-            <LottieAsset src="/animations/time.lottie" className="betpanel__wait-anim" fallback={<FallbackClock />} />
+            <LottieAsset src={ANIMATIONS.time} className="betpanel__wait-anim" fallback={<FallbackClock />} />
             <span className="betpanel__wait-text">
               {phase === "connecting" || phase === "offline"
                 ? "Ждём игровой сервер…"

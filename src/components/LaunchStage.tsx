@@ -5,6 +5,7 @@ import FallbackRocket from "./FallbackRocket.tsx";
 import FallbackExplosion from "./FallbackExplosion.tsx";
 import PingBadge from "./PingBadge.tsx";
 import FairnessPanel from "./FairnessPanel.tsx";
+import { ANIMATIONS } from "../config.ts";
 import type { ClientPhase } from "../../shared/protocol.ts";
 import type { Fairness, RoundChip } from "../hooks/useCrashRound.ts";
 import "./LaunchStage.css";
@@ -72,7 +73,7 @@ function LaunchStage({ phase, countdown, fair, history }: LaunchStageProps) {
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.65, ease: easeOut }}
             >
-              <LottieAsset src="/animations/rocket.lottie" className="stage__craft-visual" fallback={<FallbackRocket />} />
+              <LottieAsset src={ANIMATIONS.rocket} className="stage__craft-visual" fallback={<FallbackRocket />} />
             </motion.div>
           )}
 
@@ -85,7 +86,7 @@ function LaunchStage({ phase, countdown, fair, history }: LaunchStageProps) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.6, ease: easeOut }}
             >
-              <LottieAsset src="/animations/explosion.lottie" className="stage__craft-visual stage__craft-visual--boom" fallback={<FallbackExplosion />} />
+              <LottieAsset src={ANIMATIONS.explosion} className="stage__craft-visual stage__craft-visual--boom" fallback={<FallbackExplosion />} />
             </motion.div>
           )}
         </AnimatePresence>
