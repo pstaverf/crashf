@@ -32,9 +32,8 @@ function LivePayout({ amount }: { amount: number }) {
 function NeonSnake() {
   return (
     <svg className="betpanel__snake" aria-hidden="true" focusable="false">
-      <rect className="betpanel__snake-line betpanel__snake-line--tail" pathLength={100} width="100%" height="100%" rx="17.5" />
-      <rect className="betpanel__snake-line betpanel__snake-line--body" pathLength={100} width="100%" height="100%" rx="17.5" />
-      <rect className="betpanel__snake-line betpanel__snake-line--head" pathLength={100} width="100%" height="100%" rx="17.5" />
+      <rect className="betpanel__snake-line betpanel__snake-line--glow" pathLength={100} width="100%" height="100%" rx="17.5" />
+      <rect className="betpanel__snake-line" pathLength={100} width="100%" height="100%" rx="17.5" />
     </svg>
   );
 }

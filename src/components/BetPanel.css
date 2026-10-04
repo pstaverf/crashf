@@ -55,54 +55,22 @@
   rx: 17.5px;
   fill: none;
   stroke: var(--snake-hue);
-  stroke-linecap: round;
-  animation-duration: var(--snake-speed);
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-}
-
-.betpanel__snake-line--tail {
-  stroke-width: 5;
-  opacity: 0.3;
-  filter: blur(5px);
-  stroke-dasharray: 17 83;
-  stroke-dashoffset: 14.5;
-  animation-name: betpanel-snake-tail;
-}
-
-.betpanel__snake-line--body {
   stroke-width: 2;
-  opacity: 0.85;
-  filter: drop-shadow(0 0 5px var(--snake-glow));
-  stroke-dasharray: 8 92;
-  stroke-dashoffset: 5.5;
-  animation-name: betpanel-snake-body;
+  stroke-linecap: round;
+  stroke-dasharray: 16 84;
+  filter: drop-shadow(0 0 6px var(--snake-glow));
+  animation: betpanel-snake var(--snake-speed) linear infinite;
 }
 
-.betpanel__snake-line--head {
-  stroke: #fff;
-  stroke-width: 2.4;
-  filter: drop-shadow(0 0 7px var(--snake-glow)) drop-shadow(0 0 14px var(--snake-glow));
-  stroke-dasharray: 2.5 97.5;
-  stroke-dashoffset: 0;
-  animation-name: betpanel-snake-head;
+.betpanel__snake-line--glow {
+  stroke-width: 5;
+  opacity: 0.35;
+  filter: blur(5px);
 }
 
-@keyframes betpanel-snake-head {
+@keyframes betpanel-snake {
   to {
     stroke-dashoffset: -100;
-  }
-}
-
-@keyframes betpanel-snake-body {
-  to {
-    stroke-dashoffset: -94.5;
-  }
-}
-
-@keyframes betpanel-snake-tail {
-  to {
-    stroke-dashoffset: -85.5;
   }
 }
 
@@ -344,9 +312,5 @@
     animation: none;
     stroke-dasharray: none;
     opacity: 0.12;
-  }
-
-  .betpanel__snake-line--head {
-    opacity: 0.25;
   }
 }
