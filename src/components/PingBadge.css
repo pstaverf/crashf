@@ -1,0 +1,44 @@
+.ping-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 8px;
+  border-radius: 999px;
+  background: rgba(16, 16, 18, 0.6);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(6px);
+}
+
+.ping-badge__dot {
+  font-size: 9px;
+  line-height: 1;
+  animation: ping-blink 1.6s ease-in-out infinite;
+}
+
+@keyframes ping-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.ping-badge__text {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ping-badge__dot {
+    animation: none;
+  }
+}

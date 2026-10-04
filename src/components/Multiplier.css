@@ -1,0 +1,77 @@
+.mult {
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mult__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.mult__label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.mult__value {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.25s var(--ease-out);
+}
+
+.mult__value--cold {
+  color: var(--mult-cold);
+  -webkit-text-stroke: 1px var(--mult-cold-edge);
+  filter: drop-shadow(0 0 14px rgba(237, 239, 247, 0.15));
+}
+
+.mult__value--warm {
+  color: var(--mult-warm);
+  filter: drop-shadow(0 0 16px var(--mult-warm-glow));
+}
+
+.mult__value--climb {
+  color: var(--mult-climb);
+  filter: drop-shadow(0 0 18px var(--mult-climb-glow));
+}
+
+.mult__value--danger {
+  color: var(--mult-danger);
+  filter: drop-shadow(0 0 22px var(--mult-danger-glow));
+}
+
+.mult__value--shake {
+  animation: mult-shake 0.32s ease-in-out infinite;
+}
+
+@keyframes mult-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  20% {
+    transform: translate(-2px, 1px) rotate(-0.6deg);
+  }
+  40% {
+    transform: translate(2px, -1px) rotate(0.6deg);
+  }
+  60% {
+    transform: translate(-1px, -1px) rotate(-0.4deg);
+  }
+  80% {
+    transform: translate(1px, 1px) rotate(0.4deg);
+  }
+}
+
+@media (max-width: 380px) {
+  .mult__value {
+    font-size: 42px;
+  }
+}

@@ -1,0 +1,145 @@
+.betpanel {
+  margin-top: 14px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.betpanel__row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.betpanel__field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.betpanel__field-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.betpanel__input {
+  background: var(--bg-void-deep);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 17px;
+  font-family: var(--font-display);
+  padding: 11px 12px;
+  width: 100%;
+}
+
+.betpanel__input:focus {
+  outline: 2px solid var(--ignition);
+  outline-offset: 1px;
+}
+
+.betpanel__cta {
+  flex: none;
+  background: var(--ignition);
+  color: #241505;
+  border: none;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 13px 18px;
+  border-radius: var(--radius-sm);
+  transition: transform 0.15s var(--ease-out), filter 0.15s var(--ease-out);
+  white-space: nowrap;
+}
+
+.betpanel__cta:disabled {
+  background: var(--panel-raised);
+  color: var(--text-faint);
+}
+
+.betpanel__cta:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+.betpanel__cta--live {
+  position: relative;
+  width: 100%;
+  font-size: 17px;
+  background: var(--mult-climb);
+  color: #072414;
+  animation: fade-in-up 0.3s var(--ease-out);
+}
+
+.betpanel__cta--live::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-sm);
+  border: 2px solid rgba(51, 209, 126, 0.55);
+  animation: cta-pulse-ring 1.5s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes cta-pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.65;
+  }
+  100% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+}
+
+.betpanel__presets {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.betpanel__preset {
+  flex: 1;
+  background: var(--bg-void-deep);
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 7px 0;
+  border-radius: var(--radius-sm);
+}
+
+.betpanel__status {
+  text-align: center;
+  font-size: 14px;
+  padding: 6px 0 2px;
+  animation: fade-in-up 0.3s var(--ease-out);
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.betpanel__status--pending {
+  color: var(--text-muted);
+}
+
+.betpanel__status--win {
+  color: var(--mult-climb);
+  font-weight: 600;
+}
+
+.betpanel__status--loss {
+  color: var(--mult-danger);
+  font-weight: 600;
+}
+
+.betpanel__status--muted {
+  color: var(--text-faint);
+}

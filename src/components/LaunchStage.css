@@ -1,0 +1,290 @@
+.stage {
+  position: relative;
+  height: min(52vh, 380px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: linear-gradient(180deg, #101011 0%, #000000 100%);
+  border: 1px solid var(--panel-border);
+  isolation: isolate;
+}
+
+.stage--crashed {
+  animation: stage-impact 0.5s var(--ease-out);
+}
+
+@keyframes stage-impact {
+  0% {
+    box-shadow: inset 0 0 0 rgba(255, 75, 92, 0);
+  }
+  18% {
+    box-shadow: inset 0 0 90px rgba(255, 75, 92, 0.5);
+  }
+  100% {
+    box-shadow: inset 0 0 0 rgba(255, 75, 92, 0);
+  }
+}
+
+/* Living grid — two parallax layers of lines that continuously crawl
+   toward the top-left corner, faster during flight for a sense of speed. */
+.stage__grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.stage__grid-layer {
+  position: absolute;
+  inset: -80px;
+  background-image: linear-gradient(var(--grid-line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line-soft) 1px, transparent 1px);
+  will-change: transform;
+}
+
+.stage__grid-layer--near {
+  background-size: 44px 44px;
+  animation: grid-crawl-near 6.5s linear infinite;
+}
+
+.stage__grid-layer--far {
+  background-size: 88px 88px;
+  background-image: linear-gradient(var(--grid-line-far) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line-far) 1px, transparent 1px);
+  animation: grid-crawl-far 11s linear infinite;
+}
+
+@keyframes grid-crawl-near {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-44px, -44px, 0);
+  }
+}
+
+@keyframes grid-crawl-far {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-88px, -88px, 0);
+  }
+}
+
+.stage--flying .stage__grid-layer--near {
+  animation-duration: 1s;
+}
+
+.stage--flying .stage__grid-layer--far {
+  animation-duration: 2.2s;
+}
+
+.stage--crashed .stage__grid {
+  opacity: 0.4;
+  transition: opacity 0.4s var(--ease-out);
+}
+
+.stage__vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(60% 55% at 50% 62%, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+  pointer-events: none;
+}
+
+.stage__content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+}
+
+.stage__countdown-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage__countdown {
+  font-family: var(--font-display);
+  font-size: 88px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-primary);
+  text-shadow: 0 0 40px rgba(255, 180, 84, 0.25);
+  display: inline-block;
+}
+
+.stage__craft {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage__craft-visual {
+  width: 220px;
+  height: 220px;
+}
+
+/* dotLottie renders a <canvas>; force it to fill the box and stay
+   transparent so it can never paint a black rectangle over the stage. */
+.stage__craft-visual canvas,
+.stage__craft-visual svg {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+/* Once .lottie files are in place, if one of them still looks a
+   different size than the other, it means that file's own internal
+   artwork has extra padding baked in — not a layout bug. Nudge it here: */
+.stage__craft-visual--boom {
+  transform: scale(1);
+}
+
+/* --- Fallback rocket (used until rocket.lottie is added) --- */
+.fallback-rocket {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: rocket-hover 1.8s ease-in-out infinite;
+}
+
+@keyframes rocket-hover {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.fallback-rocket__svg {
+  width: 120px;
+  height: 200px;
+  overflow: visible;
+}
+
+.fallback-rocket__hull {
+  fill: #e7e9f4;
+}
+
+.fallback-rocket__fin {
+  fill: var(--ignition);
+}
+
+.fallback-rocket__window {
+  fill: var(--bg-void-deep);
+}
+
+.fallback-rocket__glow {
+  fill: var(--ignition);
+  opacity: 0.35;
+  filter: blur(6px);
+}
+
+.fallback-rocket__flame path {
+  fill: var(--ignition);
+  transform-origin: 60px 150px;
+  animation: flame-flicker 0.22s ease-in-out infinite alternate;
+}
+
+@keyframes flame-flicker {
+  from {
+    transform: scaleY(0.85) scaleX(0.92);
+    opacity: 0.85;
+  }
+  to {
+    transform: scaleY(1.08) scaleX(1.05);
+    opacity: 1;
+  }
+}
+
+/* --- Fallback explosion (used until explosion.lottie is added) --- */
+.fallback-explosion {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.fallback-explosion__ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 2px solid var(--mult-danger);
+  transform: translate(-50%, -50%);
+  animation: ring-expand 1.7s var(--ease-out) infinite;
+}
+
+.fallback-explosion__ring--1 {
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle, rgba(255, 180, 84, 0.9) 0%, rgba(255, 75, 92, 0.6) 60%, transparent 100%);
+  animation-duration: 1.3s;
+}
+
+.fallback-explosion__ring--2 {
+  width: 20px;
+  height: 20px;
+  animation-delay: 0.15s;
+}
+
+.fallback-explosion__ring--3 {
+  width: 20px;
+  height: 20px;
+  animation-delay: 0.35s;
+}
+
+@keyframes ring-expand {
+  from {
+    width: 20px;
+    height: 20px;
+    opacity: 1;
+  }
+  to {
+    width: 260px;
+    height: 260px;
+    opacity: 0;
+  }
+}
+
+.fallback-explosion__shard {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 14px;
+  background: var(--ignition);
+  border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-10px);
+  animation: shard-fly 1.3s var(--ease-out) infinite;
+}
+
+@keyframes shard-fly {
+  from {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-6px);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-90px);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .stage__countdown {
+    font-size: 72px;
+  }
+  .stage__craft-visual {
+    width: 180px;
+    height: 180px;
+  }
+}
