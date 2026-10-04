@@ -1,7 +1,8 @@
 # Ignition — Crash game
 
-React + Vite. Dark launchpad UI, 5→1 countdown, rocket → explosion crossfade,
-color-coded multiplier, betting + cash-out.
+React + TypeScript + Vite, игровой сервер на Node (без зависимостей).
+Тёмный UI стартовой площадки, отсчёт 5→1, ракета → взрыв, цветной множитель,
+ставки и кэш-аут. Раунд ведёт сервер, честность проверяется в браузере.
 
 ## Run it
 
@@ -147,27 +148,26 @@ curl -X POST localhost:8787/api/verify \
 ## Structure
 
 ```
-shared/fair.js               формула честности — импортируют И сервер, И клиент
+shared/
+  fair.ts                    формула честности — импортируют И сервер, И клиент
+  protocol.ts                типы раунда, истории и SSE-событий (общие для обеих сторон)
 server/
-  index.js                   HTTP: /api/ping, /api/state, /api/stream, /api/verify
-  engine.js                  таймлайн раунда, рассылка событий по SSE
-  chain.js                   генерация и хранение цепочки хэшей
-  crypto.js                  sha256 / hmac на node:crypto
+  index.ts                   HTTP: /api/ping, /api/state, /api/stream, /api/verify
+  engine.ts                  таймлайн раунда, рассылка событий, кэш снимка
+  chain.ts                   генерация цепочки хэшей, хранение курсора
+  crypto.ts                  sha256 / hmac на node:crypto
 src/
-  hooks/useCrashRound.js     клиент серверного раунда (SSE + локальный баланс)
-  hooks/usePing.js           реальный RTT до /api/ping + синхронизация часов
-  utils/clock.js             серверные часы (множитель считается по ним)
-  utils/fair.js              Web Crypto адаптеры + проверка раунда в браузере
-  components/
-    LaunchStage.jsx          сетка, отсчёт, ракета/взрыв
-    LottieAsset.jsx          плеер .lottie/.json с мягким фолбэком
-    FallbackRocket.jsx       CSS-ракета на случай отсутствия анимации
-    FallbackExplosion.jsx    CSS-взрыв
-    Multiplier.jsx           цветной множитель
-    BetPanel.jsx             ставка, кэш-аут
-    HistoryStrip.jsx         чипсы прошлых раундов
-    FairnessPanel.jsx        модалка «Честность» с пересчётом в браузере
-    PingBadge.jsx            индикатор сетевой задержки
+  hooks/useCrashRound.ts     клиент серверного раунда (SSE + локальный баланс)
+  hooks/usePing.ts           RTT до /api/ping + синхронизация часов
+  state/multiplier.ts        внешний стор множителя (60 к/с мимо React)
+  utils/clock.ts             серверные часы
+  utils/fair.ts              Web Crypto адаптеры + проверка раунда в браузере
+  components/                LaunchStage, Multiplier, BetPanel, FairnessPanel,
+                             PingBadge, HistoryStrip, Preloader, LottieAsset,
+                             FallbackRocket, FallbackExplosion, StageErrorBoundary
 ```
+
+Типы: `npm run typecheck` (strict, `noUncheckedIndexedAccess`, `erasableSyntaxOnly`).
+Сервер запускается прямо из `.ts` — Node 22 снимает типы сам, сборочный шаг не нужен.
 
 Полный разбор кодовой базы и список оставшихся задач — в `ANALYSIS.md`.

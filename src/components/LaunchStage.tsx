@@ -1,14 +1,24 @@
+import { memo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import LottieAsset from "./LottieAsset.jsx";
-import FallbackRocket from "./FallbackRocket.jsx";
-import FallbackExplosion from "./FallbackExplosion.jsx";
-import PingBadge from "./PingBadge.jsx";
-import FairnessPanel from "./FairnessPanel.jsx";
+import LottieAsset from "./LottieAsset.tsx";
+import FallbackRocket from "./FallbackRocket.tsx";
+import FallbackExplosion from "./FallbackExplosion.tsx";
+import PingBadge from "./PingBadge.tsx";
+import FairnessPanel from "./FairnessPanel.tsx";
+import type { ClientPhase } from "../../shared/protocol.ts";
+import type { Fairness, RoundChip } from "../hooks/useCrashRound.ts";
 import "./LaunchStage.css";
 
-const easeOut = [0.16, 1, 0.3, 1];
+const easeOut = [0.16, 1, 0.3, 1] as const;
 
-export default function LaunchStage({ phase, countdown, fair, history }) {
+interface LaunchStageProps {
+  phase: ClientPhase;
+  countdown: number;
+  fair: Fairness;
+  history: RoundChip[];
+}
+
+function LaunchStage({ phase, countdown, fair, history }: LaunchStageProps) {
   return (
     <div className={`stage stage--${phase}`}>
       <PingBadge />
@@ -24,14 +34,7 @@ export default function LaunchStage({ phase, countdown, fair, history }) {
       <div className="stage__content">
         <AnimatePresence>
           {(phase === "connecting" || phase === "offline") && (
-            <motion.div
-              key="link"
-              className="stage__link"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
+            <motion.div key="link" className="stage__link" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
               {phase === "connecting" ? "Соединение с игровым сервером…" : "Нет связи с сервером. Переподключаемся…"}
             </motion.div>
           )}
@@ -69,13 +72,7 @@ export default function LaunchStage({ phase, countdown, fair, history }) {
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.65, ease: easeOut }}
             >
-              <LottieAsset
-                src="/animations/rocket.lottie"
-                loop
-                autoplay
-                className="stage__craft-visual"
-                fallback={<FallbackRocket />}
-              />
+              <LottieAsset src="/animations/rocket.lottie" className="stage__craft-visual" fallback={<FallbackRocket />} />
             </motion.div>
           )}
 
@@ -88,13 +85,7 @@ export default function LaunchStage({ phase, countdown, fair, history }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.6, ease: easeOut }}
             >
-              <LottieAsset
-                src="/animations/explosion.lottie"
-                loop
-                autoplay
-                className="stage__craft-visual stage__craft-visual--boom"
-                fallback={<FallbackExplosion />}
-              />
+              <LottieAsset src="/animations/explosion.lottie" className="stage__craft-visual stage__craft-visual--boom" fallback={<FallbackExplosion />} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -102,3 +93,5 @@ export default function LaunchStage({ phase, countdown, fair, history }) {
     </div>
   );
 }
+
+export default memo(LaunchStage);

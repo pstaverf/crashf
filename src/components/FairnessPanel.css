@@ -151,8 +151,6 @@
   white-space: nowrap;
 }
 
-/* ---------------------------------------------- серверная проверка честности */
-
 .fairness-modal__warn {
   font-size: 12px;
   line-height: 1.5;

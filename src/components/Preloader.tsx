@@ -1,40 +1,26 @@
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import "./Preloader.css";
 
 const ASSET_URLS = ["/animations/rocket.lottie", "/animations/explosion.lottie"];
-const MAX_WAIT_MS = 4000; // never block longer than this even if a file is missing
-const MIN_SHOW_MS = 450; // avoid a one-frame flash on fast connections
+const MAX_WAIT_MS = 4000;
+const MIN_SHOW_MS = 450;
+const easeOut = [0.16, 1, 0.3, 1] as const;
 
-const easeOut = [0.16, 1, 0.3, 1];
+const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
-function preloadAsset(url) {
-  return fetch(url)
-    .then((res) => (res.ok ? res.blob() : null))
-    .catch(() => null); // missing file shouldn't block the whole app
-}
-
-function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * Shows a splash screen until the rocket/explosion animations and web fonts
- * are ready, then hands off to `children` with a smooth crossfade. Never
- * blocks forever — falls through after MAX_WAIT_MS even if an asset 404s.
- */
-export default function Preloader({ children }) {
+export default function Preloader({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     const started = performance.now();
 
-    const assets = Promise.all(ASSET_URLS.map(preloadAsset));
-    const fonts = document.fonts ? document.fonts.ready : Promise.resolve();
-    const work = Promise.all([assets, fonts]);
+    const assets = Promise.all(ASSET_URLS.map((url) => fetch(url).then((res) => res.blob()).catch(() => null)));
+    const work = Promise.all([assets, document.fonts?.ready]);
 
-    Promise.race([work, wait(MAX_WAIT_MS)]).then(async () => {
+    void Promise.race([work, wait(MAX_WAIT_MS)]).then(async () => {
       const elapsed = performance.now() - started;
       if (elapsed < MIN_SHOW_MS) await wait(MIN_SHOW_MS - elapsed);
       if (!cancelled) setReady(true);
@@ -64,12 +50,7 @@ export default function Preloader({ children }) {
           </div>
         </motion.div>
       ) : (
-        <motion.div
-          key="app"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: easeOut }}
-        >
+        <motion.div key="app" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: easeOut }}>
           {children}
         </motion.div>
       )}

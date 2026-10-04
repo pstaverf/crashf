@@ -24,8 +24,6 @@
   }
 }
 
-/* Living grid — two parallax layers of lines that continuously crawl
-   toward the top-left corner, faster during flight for a sense of speed. */
 .stage__grid {
   position: absolute;
   inset: 0;
@@ -129,8 +127,6 @@
   height: 220px;
 }
 
-/* dotLottie renders a <canvas>; force it to fill the box and stay
-   transparent so it can never paint a black rectangle over the stage. */
 .stage__craft-visual canvas,
 .stage__craft-visual svg {
   display: block;
@@ -139,14 +135,10 @@
   background: transparent !important;
 }
 
-/* Once .lottie files are in place, if one of them still looks a
-   different size than the other, it means that file's own internal
-   artwork has extra padding baked in — not a layout bug. Nudge it here: */
 .stage__craft-visual--boom {
   transform: scale(1);
 }
 
-/* --- Fallback rocket (used until rocket.lottie is added) --- */
 .fallback-rocket {
   width: 100%;
   height: 100%;
@@ -207,7 +199,6 @@
   }
 }
 
-/* --- Fallback explosion (used until explosion.lottie is added) --- */
 .fallback-explosion {
   position: relative;
   width: 100%;
@@ -289,7 +280,6 @@
   }
 }
 
-/* Состояние связи с игровым сервером */
 .stage__link {
   font-size: 13px;
   letter-spacing: 0.01em;
