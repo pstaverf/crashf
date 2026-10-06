@@ -4,8 +4,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node server/index.ts & vite",
+    "dev:client": "vite",
+    "server": "node server/index.ts",
+    "build": "tsc --noEmit && vite build",
+    "start": "node server/index.ts",
+    "serve": "bash scripts/start.sh",
+    "tunnel": "bash scripts/tunnel.sh",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -15,10 +21,17 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "5.9",
     "vite": "^5.4.21"
   },
   "overrides": {
     "@rollup/rollup-android-arm64": "4.45.1"
+  },
+  "engines": {
+    "node": ">=22.18"
   }
 }

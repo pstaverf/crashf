@@ -1,5 +1,5 @@
 :root {
-  /* Surface — true black, no blue cast */
+  
   --bg-void: #060607;
   --bg-void-deep: #000000;
   --panel: #101012;
@@ -9,17 +9,17 @@
   --grid-line-soft: rgba(255, 255, 255, 0.055);
   --grid-line-far: rgba(255, 255, 255, 0.03);
 
-  /* Text */
+  
   --text-primary: #f3f3f5;
   --text-muted: #8c8c93;
   --text-faint: #555559;
 
-  /* Ignition accent (bets, CTA, launch glow) */
+  
   --ignition: #ffb454;
   --ignition-dim: #b8823c;
   --ignition-soft: rgba(255, 180, 84, 0.16);
 
-  /* Multiplier states (fixed ranges) */
+  
   --mult-cold: #0c0c0d;
   --mult-cold-edge: rgba(255, 255, 255, 0.65);
   --mult-warm: #f5f6fb;
@@ -29,20 +29,20 @@
   --mult-danger: #ff4b5c;
   --mult-danger-glow: rgba(255, 75, 92, 0.55);
 
-  /* Status */
+  
   --win: #33d17e;
   --loss: #ff4b5c;
 
-  /* Type */
+  
   --font-display: "Space Grotesk", "Segoe UI", sans-serif;
   --font-body: "Manrope", "Segoe UI", sans-serif;
 
-  /* Shape */
+  
   --radius-sm: 10px;
   --radius-md: 18px;
   --radius-lg: 26px;
 
-  /* Motion */
+  
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }

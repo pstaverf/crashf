@@ -1,13 +1,15 @@
+import { memo } from "react";
+import type { RoundChip } from "../hooks/useCrashRound.ts";
 import "./HistoryStrip.css";
 
-function rangeFor(value) {
-  if (value < 2.0) return "cold";
-  if (value <= 3.0) return "warm";
-  if (value <= 10.0) return "climb";
+const rangeFor = (value: number): string => {
+  if (value < 2) return "cold";
+  if (value <= 3) return "warm";
+  if (value <= 10) return "climb";
   return "danger";
-}
+};
 
-export default function HistoryStrip({ history }) {
+function HistoryStrip({ history }: { history: RoundChip[] }) {
   if (history.length === 0) return <div className="history history--empty">Раунды появятся здесь</div>;
 
   return (
@@ -20,3 +22,5 @@ export default function HistoryStrip({ history }) {
     </div>
   );
 }
+
+export default memo(HistoryStrip);
